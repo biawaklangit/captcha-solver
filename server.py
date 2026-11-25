@@ -380,13 +380,15 @@ async def _dispatch(req: SolveRequest) -> dict:
             if req.verify_url and req.verify_payload:
                 r = await solve_and_verify(
                     req.sitekey, req.verify_url, req.verify_payload, req.action,
-                    cdata=req.cdata, page_url=req.page_url)
+                    cdata=req.cdata, page_url=req.page_url, proxy=req.proxy)
             elif req.real_page:
                 actions, fetches = _extract(req)
                 r = await solve_turnstile_realpage(
-                    req.url, req.sitekey, req.timeout_s, actions, fetches)
+                    req.url, req.sitekey, req.timeout_s, actions, fetches,
+                    proxy=req.proxy)
             else:
-                r = await solve_turnstile(req.sitekey, req.url, req.action, req.cdata)
+                r = await solve_turnstile(req.sitekey, req.url, req.action, req.cdata,
+                                          proxy=req.proxy)
         except TimeoutError as e:
             r = {"token": "", "error": str(e), "method": "route"}
         return {"type": "turnstile", **r}
@@ -626,4 +628,4 @@ async def solver_status():
 if __name__ == "__main__":
     import uvicorn
     port = int(os.getenv("PORT", "8877"))
-    uvicorn.run(app, host="0.0.0.0", port=port)
+    uvicorn.run(app, host="127.0.0.1", port=port)
